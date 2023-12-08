@@ -1,0 +1,152 @@
+# To improve query performance, we strongly suggest adding indexes to any field that you plan to filter or sort by
+# Add the `@index` or `@index(unique: true)` annotation after any non-key field
+# https://academy.subquery.network/build/graphql.html#indexing-by-non-primary-key-field
+enum Option {
+  HIGH
+  LOW
+}
+
+enum StatusCode {
+  IN_PROGRESS
+  INVALID_UPDATE_DATA
+  INVALID_OPTION
+  MARKET_DOES_NOT_EXIST
+  CANNOT_STAKE_ZERO_AMOUNT
+  INSUFFICIENT_BALANCE
+  ROUND_NOT_SETTLED
+  POSITION_NOT_FOUND
+  POSITION_SETTLED
+}
+
+type Round @entity {
+  # MarketId-RoundID
+  id: ID!
+  # The market this round exist in
+  market: Market!
+  # Unix timestamp of when round is open
+  openingTime: BigInt!
+  # Unix timestamp of when round will end
+  closingTime: BigInt!
+  # Unix timestamp of when entry to market is no longer permitted
+  entryDeadline: BigInt!
+  # Asset market closing price
+  closingPrice: BigInt
+  # Total staked amount of users participating in the current round
+  totalStake: BigInt!
+  # Total staked amount of winners in the current round
+  totalWinningStake: BigInt!
+  # Total amount available as reward for current round
+  rewardPool: BigInt!
+  # True if this is a no loss round
+  isNoLossMode: Boolean
+  # True if round has been finalized, otherwise false
+  isFinalized: Boolean
+}
+
+type Withdrawal @entity {
+  # Transaction hash
+  id: ID!
+  # Account making the request
+  account: Account!
+  # Withdrawal amount requested
+  amount: BigInt!
+  # Unix timestamp of when request was received
+  requestedOn: BigInt!
+  # Unix timestamp of when request was completed
+  completedOn: BigInt
+  # Status of withdrawal, false if not yet completed
+  isCompleted: Boolean!
+}
+
+type Deposit @entity {
+  # Transaction hash
+  id: ID!
+  # Account making deposit
+  account: Account!
+  # The currency deposited
+  currency: String!
+  # Amount deposited
+  amount: BigInt!
+  # True if deposit is confirmed at the controller
+  isCompleted: Boolean!
+  # Unix timestamp of when deposit was received
+  createdAt: BigInt!
+  # Unix timestamp of when deposit was received
+  updatedAt: BigInt
+}
+
+type Position @entity {
+  # positionId = keccak256(abi.encodePacked(marketId, roundId, owner))
+  id: ID!
+  # Account
+  account: Account!
+  # The market this position was opened in
+  market: Market!
+  # Active round position was taken
+  round: Round!
+  # Asset price when position was taken
+  price: BigInt!
+  # Amount staked as wager for position
+  stake: BigInt!
+  # Predicted market directon
+  option: BigInt!
+  # True if the position is open
+  isOpen: Boolean!
+  # True if user has claimed reward for round
+  isRewardClaimed: Boolean!
+  # Amount of reward claimed
+  rewardAmountClaimed: BigInt
+  # Postion status code
+  status: BigInt!
+  # Unix timestamp when position was created
+  createdAt: BigInt!
+}
+
+type Account @entity {
+  # Account bytes32 address
+  id: ID!
+  # Balance of account
+  balances: [Balance]! @derivedFrom(field: "account")
+  # This accounts positions
+  positions: [Position!]! @derivedFrom(field: "account")
+  # The deposits made by this account
+  deposits: [Deposit!]! @derivedFrom(field: "account")
+  # The withdrawals made by this account
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "account")
+}
+
+type Market @entity {
+  # keccak256(abi.encodePacked(oracleId, currency)
+  id: ID!
+  # The Pyth network oracle id
+  oracleId: String!
+  # The currency accepted on this market
+  currency: String!
+  # The protocolFee charged on this market
+  protocolFee: BigInt!
+  # The number of seconds after which entry to market will be closed
+  deadline: BigInt!
+  # The duration of each market round in seconds
+  duration: BigInt!
+  # True if the market is paused and participation is temporarilly disabled
+  paused: Boolean!
+  # The total market volume
+  volume: BigInt!
+  # The total high volume for this market
+  highVolume: BigInt!
+  # The total low volume for this market
+  lowVolume: BigInt!
+  # The total number of rounds on this market so far
+  roundCount: BigInt!
+}
+
+type Balance @entity {
+  # Account-currency
+  id: ID!
+  # Address of token contract
+  currency: String!
+  # Account that owns this balance
+  account: Account!
+  # Account balance
+  balance: BigDecimal!
+}
