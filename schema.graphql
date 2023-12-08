@@ -89,7 +89,7 @@ type Position @entity {
   # Amount staked as wager for position
   stake: BigInt!
   # Predicted market directon
-  option: BigInt!
+  option: Option!
   # True if the position is open
   isOpen: Boolean!
   # True if user has claimed reward for round
@@ -97,7 +97,7 @@ type Position @entity {
   # Amount of reward claimed
   rewardAmountClaimed: BigInt
   # Postion status code
-  status: BigInt!
+  status: StatusCode!
   # Unix timestamp when position was created
   createdAt: BigInt!
 }
