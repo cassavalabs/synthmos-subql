@@ -148,5 +148,5 @@ type Balance @entity {
   # Account that owns this balance
   account: Account!
   # Account balance
-  balance: BigDecimal!
+  balance: BigInt!
 }
